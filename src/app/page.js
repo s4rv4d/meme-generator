@@ -1,95 +1,147 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useState, useRef } from "react";
+import Draggable from "react-draggable";
+import { ResizableBox, Resizable } from "react-resizable";
+import "/Users/sarvadshetty/Documents/nextJsStuff/meme-gen-2/node_modules/react-resizable/css/styles.css";
+import html2canvas from "html2canvas";
 
 export default function Home() {
+  const [imageSrc, setImageSrc] = useState(null); // To store the uploaded image source
+  const [topText, setTopText] = useState(""); // To store the top text
+  const [bottomText, setBottomText] = useState(""); // To store the bottom text
+  const [bounds, setBounds] = useState({
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  });
+  const [resizeFirstBounds, setResizeFirstBounds] = useState({
+    width: 200,
+    height: 200,
+  });
+  const [resizeSecondBounds, setResizeSecondBounds] = useState({
+    width: 200,
+    height: 200,
+  });
+
+  const imageRef = useRef(null);
+  const memeRef = useRef(null);
+
+  // Function to handle image file upload
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageSrc(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // On top layout
+  const onResizeFirstLabel = (event, { node, size, handle }) => {
+    setResizeFirstBounds({ width: size.width, height: size.height });
+  };
+  const onResizeSecondLabel = (event, { node, size, handle }) => {
+    setResizeSecondBounds({ width: size.width, height: size.height });
+  };
+
+  const exportMeme = () => {
+    if (memeRef.current) {
+      html2canvas(memeRef.current, { backgroundColor: null }).then((canvas) => {
+        // Create an image from the canvas
+        const image = canvas.toDataURL("image/png");
+
+        // Create a link to download the image
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = "meme.png"; // Specify the download file name
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div style={{ background: "green" }}>
+      <h1>Meme Generator</h1>
+      <input type="file" onChange={handleImageChange} />
+      <input
+        type="text"
+        placeholder="Top text"
+        value={topText}
+        onChange={(e) => setTopText(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Bottom text"
+        value={bottomText}
+        onChange={(e) => setBottomText(e.target.value)}
+      />
+      <button onClick={exportMeme}>Export Meme</button>
+      {imageSrc && (
+        <div
+          ref={memeRef}
+          style={{
+            position: "absolute",
+            textAlign: "center",
+            userSelect: "none",
+          }}
+        >
+          <img
+            ref={imageRef}
+            src={imageSrc}
+            alt="Meme"
+            style={{ width: "400px", maxHeight: "400px" }}
+          />
+          <Draggable bounds="parent" defaultPosition={{ x: 0, y: -110 }}>
+            <Resizable
+              height={resizeFirstBounds.height}
+              width={resizeFirstBounds.width}
+              onResize={onResizeFirstLabel}
+            >
+              <h2
+                style={{
+                  position: "absolute",
+                  cursor: "move",
+                  background: "transparent",
+                  width: resizeFirstBounds.width + "px",
+                  height: resizeFirstBounds.height + "px",
+                  whiteSpace: "normal", // Allows text to wrap rather than overflow
+                  overflowWrap: "break-word", // Ensures long words do not overflow
+                  padding: "4px",
+                  color: "black",
+                }}
+              >
+                {topText}
+              </h2>
+            </Resizable>
+          </Draggable>
+          <Draggable bounds="parent" defaultPosition={{ x: 0, y: 0 }}>
+            <Resizable
+              height={resizeSecondBounds.height}
+              width={resizeSecondBounds.width}
+              onResize={onResizeSecondLabel}
+            >
+              <h2
+                style={{
+                  position: "absolute",
+                  cursor: "move",
+                  background: "transparent",
+                  width: resizeSecondBounds.width + "px",
+                  height: resizeSecondBounds.height + "px",
+                  whiteSpace: "normal", // Allows text to wrap rather than overflow
+                  overflowWrap: "break-word", // Ensures long words do not overflow
+                  padding: "4px",
+                  color: "black",
+                }}
+              >
+                {bottomText}
+              </h2>
+            </Resizable>
+          </Draggable>
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      )}
+    </div>
   );
 }
